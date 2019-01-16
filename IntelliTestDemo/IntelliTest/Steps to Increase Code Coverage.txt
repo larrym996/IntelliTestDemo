@@ -1,0 +1,46 @@
+1. Find GetPlayerStatisticsHandler.cs file and right click to add and run IntelliTest.
+
+2. In the PUT test project add a reference to PokerLeagueManager.Common.Tests, and PokerLeageManager.Common.DTO 
+
+3. At the top of GetPlayerStatisticsHandlerTest.cs add
+using System.Linq;
+using Microsoft.Pex.Framework.Using; 
+using PokerLeagueManager.Common.Tests;
+using PokerLeagueManager.Common.DTO;  
+using PokerLeagueManager.Common.DTO.DataTransferObjects.Lookups; 
+
+4. Add additional parameters to PUT test
+LookupGamePlayersDto[] lookupGamePlayers, 
+GetPlayerStatisticsDto[] getPlayerStatistics 
+
+5. Add an additional attribute, and additional assumuptions and arranging of input data to help Pex.
+
+[PexUseType(typeof(FakeQueryDataStore))] 
+
+            // assume 
+            PexAssume.IsNotNull(lookupGamePlayers);
+            PexAssume.IsTrue(lookupGamePlayers.Length == 2);
+            PexAssume.IsNotNull(lookupGamePlayers[0]);
+            PexAssume.IsNotNull(lookupGamePlayers[1]);
+            PexAssume.IsNotNull(getPlayerStatistics);
+            PexAssume.IsTrue(getPlayerStatistics.Length == 1);
+            PexAssume.IsNotNull(getPlayerStatistics[0]);
+            PexAssume.IsTrue(lookupGamePlayers[0].PlayerName == getPlayerStatistics[0].PlayerName);
+
+            // arrange 
+            foreach (var lookupGamePlayer in lookupGamePlayers)
+            {
+                target.QueryDataStore.Insert<LookupGamePlayersDto>(lookupGamePlayer);
+            }
+            target.QueryDataStore.Insert<GetPlayerStatisticsDto>(getPlayerStatistics[0]);
+
+            // act
+            target.Handle(e);
+
+            // assert 
+            var playerStats = target.QueryDataStore.GetData<GetPlayerStatisticsDto>().Single();
+            PexObserve.ValueAtEndOfTest("playerStats", playerStats);
+
+6. Delete the .g.cs file once again, since we changed the signature of the PUT
+
+  
